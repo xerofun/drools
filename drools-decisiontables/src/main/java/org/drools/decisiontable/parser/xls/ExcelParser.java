@@ -16,178 +16,166 @@
 
 package org.drools.decisiontable.parser.xls;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import jxl.Cell;
-import jxl.CellType;
-import jxl.NumberCell;
-import jxl.Range;
-import jxl.Sheet;
-import jxl.Workbook;
-import jxl.WorkbookSettings;
+import jxl.*;
 import jxl.read.biff.BiffException;
-
 import org.drools.decisiontable.parser.DecisionTableParser;
 import org.drools.template.parser.DataListener;
 import org.drools.template.parser.DecisionTableParseException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 /**
  * Parse an excel spreadsheet, pushing cell info into the SheetListener interface.
  */
 public class ExcelParser
-    implements
-    DecisionTableParser {
+        implements
+        DecisionTableParser {
 
-    public static final String              DEFAULT_RULESHEET_NAME = "Decision Tables";
-    private Map<String, List<DataListener>> _listeners = new HashMap<String, List<DataListener>>();
-    private boolean                         _useFirstSheet;
+    public static final String                          DEFAULT_RULESHEET_NAME = "Decision Tables";
+    private             Map<String, List<DataListener>> _listeners             = new HashMap<String, List<DataListener>>();
+    private boolean _useFirstSheet;
 
     /**
      * Define a map of sheet name to listener handlers.
-     * 
-     * @param sheetListeners
-     *            map of String to SheetListener
+     *
+     * @param sheetListeners map of String to SheetListener
      */
     public ExcelParser(final Map<String, List<DataListener>> sheetListeners) {
         this._listeners = sheetListeners;
     }
 
     public ExcelParser(final List<DataListener> sheetListeners) {
-        this._listeners.put( ExcelParser.DEFAULT_RULESHEET_NAME,
-                            sheetListeners );
+        this._listeners.put(ExcelParser.DEFAULT_RULESHEET_NAME,
+                            sheetListeners);
         this._useFirstSheet = true;
     }
 
     public ExcelParser(final DataListener listener) {
         List<DataListener> listeners = new ArrayList<DataListener>();
-        listeners.add( listener );
-        this._listeners.put( ExcelParser.DEFAULT_RULESHEET_NAME,
-                            listeners );
+        listeners.add(listener);
+        this._listeners.put(ExcelParser.DEFAULT_RULESHEET_NAME,
+                            listeners);
         this._useFirstSheet = true;
     }
 
     public void parseFile(InputStream inStream) {
         try {
             WorkbookSettings ws = new WorkbookSettings();
-            Workbook workbook = Workbook.getWorkbook( inStream, ws);
+            Workbook workbook = Workbook.getWorkbook(inStream, ws);
 
-            if ( _useFirstSheet ) {
-                Sheet sheet = workbook.getSheet( 0 );
-                processSheet( sheet,
-                              _listeners.get( DEFAULT_RULESHEET_NAME ) );
+            if (_useFirstSheet) {
+                Sheet sheet = workbook.getSheet(0);
+                processSheet(sheet,
+                             _listeners.get(DEFAULT_RULESHEET_NAME));
             } else {
-                for ( String sheetName : _listeners.keySet() ) {
-                    Sheet sheet = workbook.getSheet( sheetName );
+                for (String sheetName : _listeners.keySet()) {
+                    Sheet sheet = workbook.getSheet(sheetName);
                     if (sheet == null) {
                         throw new IllegalStateException("Could not find the sheetName (" + sheetName
-                                + ") in the workbook sheetNames (" + Arrays.toString(workbook.getSheetNames()) + ").");
+                                                        + ") in the workbook sheetNames (" + Arrays.toString(workbook.getSheetNames()) + ").");
                     }
-                    processSheet( sheet,
-                                  _listeners.get( sheetName ) );
+                    processSheet(sheet,
+                                 _listeners.get(sheetName));
 
                 }
             }
-        } catch ( BiffException e ) {
-            throw new DecisionTableParseException( "An error occurred opening the workbook. It is possible that the encoding of the document did not match the encoding of the reader.",
-                                                   e );
+        } catch (BiffException e) {
+            throw new DecisionTableParseException("An error occurred opening the workbook. It is possible that the encoding of the document did not match the encoding of the reader.",
+                                                  e);
 
-        } catch ( IOException e ) {
-            throw new DecisionTableParseException( "Failed to open Excel stream, " + "please check that the content is xls97 format.",
-                                                   e );
+        } catch (IOException e) {
+            throw new DecisionTableParseException("Failed to open Excel stream, " + "please check that the content is xls97 format.",
+                                                  e);
         }
 
     }
 
     private void processSheet(Sheet sheet,
-                              List< ? extends DataListener> listeners) {
+                              List<? extends DataListener> listeners) {
         int maxRows = sheet.getRows();
 
         Range[] mergedRanges = sheet.getMergedCells();
 
-        for ( int i = 0; i < maxRows; i++ ) {
-            Cell[] row = sheet.getRow( i );
-            newRow( listeners,
-                    i,
-                    row.length );
-            for ( int cellNum = 0; cellNum < row.length; cellNum++ ) {
+        for (int i = 0; i < maxRows; i++) {
+            Cell[] row = sheet.getRow(i);
+            newRow(listeners,
+                   i,
+                   row.length);
+            for (int cellNum = 0; cellNum < row.length; cellNum++) {
                 Cell cell = row[cellNum];
                 double num = 0;
 
-                Range merged = getRangeIfMerged( cell,
-                                                 mergedRanges );
+                Range merged = getRangeIfMerged(cell,
+                                                mergedRanges);
 
-                if ( merged != null ) {
+                if (merged != null) {
                     Cell topLeft = merged.getTopLeft();
-                    newCell( listeners,
-                             i,
-                             cellNum,
-                             topLeft.getContents(),
-                             topLeft.getColumn() );                		
+                    newCell(listeners,
+                            i,
+                            cellNum,
+                            topLeft.getContents(),
+                            topLeft.getColumn());
                 } else {
-                	if (cell.getType() == CellType.NUMBER) {
-                		NumberCell nc = (NumberCell) cell; 
-                		num = nc.getValue();
-                	}                	
-                	if ( Math.abs(num) - Math.ceil(num) != 0 ) {
-                		newCell(listeners, i, cellNum, String.valueOf(num), DataListener.NON_MERGED );	
-                	} else {
-                        newCell( listeners,
+                    if (cell.getType() == CellType.NUMBER) {
+                        NumberCell nc = (NumberCell) cell;
+                        num = nc.getValue();
+                    }
+                    if (Math.abs(num) - Math.ceil(num) != 0) {
+                        newCell(listeners, i, cellNum, String.valueOf(num), DataListener.NON_MERGED);
+                    } else {
+                        newCell(listeners,
                                 i,
                                 cellNum,
                                 cell.getContents(),
-                                DataListener.NON_MERGED );               		
-                	}
+                                DataListener.NON_MERGED);
+                    }
                 }
             }
         }
-        finishSheet( listeners );
+        finishSheet(listeners);
     }
 
     Range getRangeIfMerged(Cell cell,
                            Range[] mergedRanges) {
-        for ( int i = 0; i < mergedRanges.length; i++ ) {
+        for (int i = 0; i < mergedRanges.length; i++) {
             Range r = mergedRanges[i];
             Cell topLeft = r.getTopLeft();
             Cell bottomRight = r.getBottomRight();
-            if ( cell.getRow() >= topLeft.getRow() && cell.getRow() <= bottomRight.getRow() && cell.getColumn() >= topLeft.getColumn() && cell.getColumn() <= bottomRight.getColumn() ) {
+            if (cell.getRow() >= topLeft.getRow() && cell.getRow() <= bottomRight.getRow() && cell.getColumn() >= topLeft.getColumn() && cell.getColumn() <= bottomRight.getColumn()) {
                 return r;
             }
         }
         return null;
     }
 
-    
-    private void finishSheet(List< ? extends DataListener> listeners) {
-        for ( DataListener listener : listeners ) {
+
+    private void finishSheet(List<? extends DataListener> listeners) {
+        for (DataListener listener : listeners) {
             listener.finishSheet();
         }
     }
 
-    private void newRow(List< ? extends DataListener> listeners,
+    private void newRow(List<? extends DataListener> listeners,
                         int row,
                         int cols) {
-        for ( DataListener listener : listeners ) {
-            listener.newRow( row,
-                             cols );
+        for (DataListener listener : listeners) {
+            listener.newRow(row,
+                            cols);
         }
     }
 
-    public void newCell(List< ? extends DataListener> listeners,
+    public void newCell(List<? extends DataListener> listeners,
                         int row,
                         int column,
                         String value,
                         int mergedColStart) {
-        for ( DataListener listener : listeners ) {
-            listener.newCell( row,
-                              column,
-                              value,
-                              mergedColStart );
+        for (DataListener listener : listeners) {
+            listener.newCell(row,
+                             column,
+                             value,
+                             mergedColStart);
         }
     }
 

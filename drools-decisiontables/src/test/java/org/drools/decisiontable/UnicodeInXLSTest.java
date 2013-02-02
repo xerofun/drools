@@ -1,13 +1,5 @@
 package org.drools.decisiontable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.drools.compiler.DecisionTableFactory;
 import org.junit.Test;
 import org.kie.KnowledgeBase;
@@ -22,9 +14,15 @@ import org.kie.io.ResourceFactory;
 import org.kie.io.ResourceType;
 import org.kie.runtime.StatefulKnowledgeSession;
 
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.*;
+
 public class UnicodeInXLSTest {
 
-	@Test
+    @Test
     public void testCzechXLSDecisionTable() throws FileNotFoundException {
 
         DecisionTableConfiguration dtconf = KnowledgeBuilderFactory.newDecisionTableConfiguration();
@@ -34,13 +32,13 @@ public class UnicodeInXLSTest {
         if (kbuilder.hasErrors()) {
             System.out.println(kbuilder.getErrors().toString());
             System.out.println(DecisionTableFactory.loadFromInputStream(getClass().getResourceAsStream("unicode.xls"), dtconf));
-            fail("Cannot build XLS decision table containing utf-8 characters\n" + kbuilder.getErrors().toString() );
+            fail("Cannot build XLS decision table containing utf-8 characters\n" + kbuilder.getErrors().toString());
         }
         KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
         kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-        
+
         StatefulKnowledgeSession ksession = kbase.newStatefulKnowledgeSession();
-        
+
         List<Command<?>> commands = new ArrayList<Command<?>>();
         List<Člověk> dospělí = new ArrayList<Člověk>();
         commands.add(CommandFactory.newSetGlobal("dospělí", dospělí));
@@ -59,10 +57,10 @@ public class UnicodeInXLSTest {
 
         ksession.dispose();
     }
-	
+
     public static class Člověk {
 
-        private int věk;
+        private int    věk;
         private String jméno;
 
         public void setVěk(int věk) {

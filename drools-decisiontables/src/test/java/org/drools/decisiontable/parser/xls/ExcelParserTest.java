@@ -16,29 +16,28 @@
 
 package org.drools.decisiontable.parser.xls;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-import java.util.List;
-import java.util.Map;
-
 import jxl.Cell;
 import jxl.CellType;
 import jxl.Range;
 import jxl.format.CellFormat;
-
 import org.drools.template.parser.DataListener;
 import org.junit.Test;
 
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 /**
- *
  * Some unit tests for the corners of ExcelParser that are not explicitly
  * covered by integration tests.
  */
 public class ExcelParserTest {
     /**
-     * This should test to see if a cell is in a certain range or not. 
+     * This should test to see if a cell is in a certain range or not.
      * If it is in a merged range, then it should return the top left cell.
+     *
      * @throws Exception
      */
     @Test
@@ -55,7 +54,6 @@ public class ExcelParserTest {
         r1.topLeft.contents = "first";
 
 
-
         r1.bottomRight = new MockCell();
         r1.bottomRight.column = 5;
         r1.bottomRight.row = 7;
@@ -67,21 +65,21 @@ public class ExcelParserTest {
         cell.row = 1;
         cell.column = 1;
 
-        assertNull(parser.getRangeIfMerged( cell, ranges));
+        assertNull(parser.getRangeIfMerged(cell, ranges));
 
         cell = new MockCell();
         cell.contents = "wrong";
         cell.row = 2;
         cell.column = 5;
 
-        assertEquals("first", parser.getRangeIfMerged( cell, ranges).getTopLeft().getContents());
+        assertEquals("first", parser.getRangeIfMerged(cell, ranges).getTopLeft().getContents());
 
     }
-    
+
     static class MockCell<CellFeatures> implements Cell {
 
-        int column;
-        int row;
+        int    column;
+        int    row;
         String contents;
 
 
@@ -115,7 +113,7 @@ public class ExcelParserTest {
         }
 
     }
-    
+
     static class MockRange implements Range {
 
         MockCell bottomRight;
